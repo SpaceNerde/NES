@@ -1,0 +1,7 @@
+{
+    "jdk.jdkhome": "/home/florianpospiech/.gradle/jdks/eclipse_adoptium-25-amd64-linux.2",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "files.exclude": { "**/.gradle": true, "**/build": true },
+    "cSpell.language": "en",
+    "cSpell.enableFiletypes": ["kotlin", "java", "gradle", "markdown"]
+}
