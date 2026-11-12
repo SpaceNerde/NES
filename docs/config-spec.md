@@ -210,3 +210,46 @@ The plugin should fail fast with messages that name the key:
 - Multiple nodes or providers.
 - A database connection string.
 - Per-instance overrides beyond `name` (the command argument).
+
+## 11. Template base image — recommendation
+
+For v1, the `itzg/minecraft-server` image is a good default base:
+
+- Paper is supported via `TYPE=PAPER`, `VERSION=26.3` and `PAPER_BUILD`.
+- Paper 26.3 requires Java 25; the `java25` image variant matches.
+- Its `/data` bind-mount model maps directly to the per-instance directory.
+- It ships an `mc-monitor` healthcheck, which is the same server-list ping used for
+  readiness. That is a useful extra signal, but NES should keep its own ping as the
+  source of truth so the provider stays image-independent.
+
+Suggested template settings:
+
+```
+image = "itzg/minecraft-server:java25"   # pin a release tag or digest in production
+TYPE=PAPER
+VERSION=26.3
+PAPER_BUILD=<the build you tested>
+MEMORY=<match the container memory limit>
+EULA=TRUE
+ONLINE_MODE=FALSE
+SKIP_DOWNLOAD_DEFAULTS=TRUE
+USE_AIKAR_FLAGS=TRUE                       # or Paper's recommended JVM flags
+```
+
+Caveats:
+
+- There is no documented Velocity-forwarding environment variable. Bake
+  `config/paper-global.yml` into the template, or manage it through
+  `PAPER_CONFIG_REPO`. Keep `online-mode=false` in `server.properties` and
+  `online-mode: true` in Paper's Velocity proxy settings.
+- The entrypoint resolves/downloads Paper and applies defaults on every start. For
+  admin-created instances this is acceptable; if create latency becomes important,
+  pre-seed `/data` with the tested Paper jar or build a pre-baked image. The provider
+  contract does not change.
+- Do not use `latest` or the compose example's `pull_policy: daily` in production.
+- Disable `AUTOSTOP`/`AUTOPAUSE`; NES owns lifecycle. Use restart policy `no`.
+- The image runs as UID/GID 1000 by default. Ensure the copied instance directory is
+  writable by that user, or set `UID`/`GID`.
+- Keep the Docker stop grace period longer than the image's shutdown announcement delay,
+  or disable the announcement for fast deletes.
+
