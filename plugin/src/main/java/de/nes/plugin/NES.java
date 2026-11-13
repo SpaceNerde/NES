@@ -1,4 +1,4 @@
-package de.nes;
+package de.nes.plugin;
 
 import java.util.logging.Logger;
 

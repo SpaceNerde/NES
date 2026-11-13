@@ -11,4 +11,4 @@ plugins {
 }
 
 rootProject.name = "NES"
-include("plugin")
+include("plugin", "docker-provider", "core")

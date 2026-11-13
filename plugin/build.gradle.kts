@@ -19,6 +19,8 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":core"))
+
     // Use JUnit Jupiter for testing.
     testImplementation(libs.junit.jupiter)
 
@@ -41,7 +43,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = "de.nes.NES"
+    mainClass = "de.nes.plugin.NES"
 }
 
 tasks.named<Test>("test") {
