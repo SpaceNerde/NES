@@ -7,8 +7,11 @@
 
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
-    application
+    java
+    id("com.gradleup.shadow") version "9.6.1"
 }
+
+version = "1.0.0"
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -20,6 +23,7 @@ repositories {
 
 dependencies {
     implementation(project(":core"))
+    implementation(project(":docker-provider"))
 
     // Use JUnit Jupiter for testing.
     testImplementation(libs.junit.jupiter)
@@ -41,12 +45,16 @@ java {
     }
 }
 
-application {
-    // Define the main class for the application.
-    mainClass = "de.nes.plugin.NES"
-}
-
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+tasks.shadowJar {
+    archiveBaseName = "nes"
+    archiveClassifier = ""
+}
+
+tasks.build {
+    dependsOn(tasks.shadowJar)
 }
