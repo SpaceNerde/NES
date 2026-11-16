@@ -12,6 +12,7 @@
 
 # Package Files #
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear
@@ -36,3 +37,7 @@ build
 
 # IDE (VS Code / Eclipse JDT) build output
 bin/
+.classpath
+.project
+.settings/
+.factorypath
