@@ -33,3 +33,6 @@ build
 .kotlin
 
 .vscode
+
+# IDE (VS Code / Eclipse JDT) build output
+bin/
