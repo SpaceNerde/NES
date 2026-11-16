@@ -1,4 +1,4 @@
-package de.nes.plugin.util;
+package de.nes.plugin.config;
 
 import java.io.IOException;
 import java.io.InputStream;

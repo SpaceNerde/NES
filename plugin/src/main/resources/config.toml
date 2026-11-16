@@ -3,6 +3,9 @@ public-host = "mc.example.com"
 default-template = "lobby"
 shutdown-behavior = "leave-running"
 
+templates-root = "templates"
+instances-root = "instances"
+
 [provider]
 type = "docker"
 
@@ -10,9 +13,6 @@ type = "docker"
 host = "unix:///var/run/docker.sock"
 network = ""
 port-range = [25565, 25665]
-
-templates-root = "templates"
-instances-root = "instances"
 
 [templates.lobby]
 image = "itzg/minecraft-server:java25"
