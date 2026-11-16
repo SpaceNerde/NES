@@ -121,6 +121,86 @@ A future **node agent** becomes a new provider implementation plus a small HTTP 
 A future **group/scaling policy** becomes a component above the lifecycle service that
 asks it to create or delete instances.
 
+### Module layout (Gradle)
+
+v1 needs three modules. Everything else is a later adapter or an optional test helper.
+
+```
+NES/
+├── core/                 # pure Java library: domain, lifecycle, provider SPI
+├── provider-docker/      # Docker adapter: implements the provider SPI
+├── plugin/               # Velocity adapter; produces the shaded plugin jar
+│
+├── provider-agent/       # future: HTTP client for a node agent
+├── agent/                # future: standalone node daemon (Docker on another host)
+├── provider-kubernetes/  # future: if the network already runs K8s
+├── provider-panel/       # future: Pterodactyl/Pelican adapter
+└── testing/              # optional: fake provider, E2E harness, fixtures
+```
+
+| Module | Contains | Must not contain |
+|---|---|---|
+| `core` | `Instance`, `InstanceId`, `InstanceState`, `InstanceProvider`, `CreateRequest`, `ProviderInstance`, `InstanceManager`/lifecycle service, `ProxyGateway` port, `TemplateInstaller`, small utilities | Velocity classes, Docker classes, command parsing |
+| `provider-docker` | `DockerInstanceProvider`, Docker config, labels, port allocation, log reading | Velocity classes, command/event code |
+| `plugin` | `NesPlugin`, config loading, `VelocityProxyGateway`, readiness probe, commands, listeners, DI/wiring, shaded jar | Docker SDK types outside the provider module |
+| `agent` (future) | HTTP API, agent config, provider composition | Velocity classes |
+| `provider-agent` (future) | HTTP client implementing `InstanceProvider` | Docker SDK, Velocity classes |
+| `testing` (optional) | `FakeProvider`, test fixtures, end-to-end harness | Production code |
+
+Dependency direction:
+
+```
+                 ┌──────────────┐
+                 │    core      │  domain + lifecycle + SPI
+                 └──────▲───────┘
+                        │
+        ┌───────────────┼────────────────┐
+        │               │                │
+┌───────┴──────┐ ┌──────┴───────┐ ┌──────┴─────────┐
+│ provider-    │ │ provider-    │ │    plugin      │
+│ docker       │ │ agent        │ │ (Velocity)     │
+└──────────────┘ └──────────────┘ └────────────────┘
+```
+
+`core` is the only module both the proxy and a future agent share. That is what makes
+the agent extraction and the lifecycle tests possible without dragging Velocity or
+Docker into the domain.
+
+The `InstanceManager`/lifecycle service lives in `core` and talks to the proxy through a
+small `ProxyGateway` port:
+
+```
+ProxyGateway {
+  register(Instance, ServerInfo)
+  unregister(ServerInfo)
+  players(ServerInfo) -> collection
+  redirect(player, target)
+  disconnect(player, reason)
+}
+```
+
+`plugin` implements that port with `ProxyServer`, `RegisteredServer` and the Velocity
+scheduler; proxy-facing mutations are scheduled inside the implementation. Readiness
+(raw `RegisteredServer.ping()`) also belongs in `plugin`, behind a
+`ReadinessProbe` port if core needs to drive the polling loop. This keeps `core`
+Velocity-free and unit-testable.
+
+Packaging:
+
+- `plugin` uses Shadow to produce one jar and relocates third-party libraries
+  (docker-java, Jackson, Guava, commons, Bouncy Castle).
+- `core` and `provider-docker` are plain `java-library` modules, not separately
+  published in v1.
+- `agent` is a separate application jar, not shaded into the proxy plugin.
+- `provider-agent` is included in the plugin only when the agent mode is used.
+
+Deliberately not modules yet:
+
+- no `api` module until another plugin needs a public NES API;
+- no `database` module until autoscaling/multi-proxy needs persistence;
+- no `provider-local` unless bare-metal becomes a real target;
+- no module per command, event or template.
+
 ## 6. Domain model
 
 ### Template

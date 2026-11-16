@@ -1,8 +1,0 @@
-{
-  "id": "nes-plugin",
-  "main": "de.nes.NES",
-  "name": "Not Enough Servers - NES",
-  "version": "1.0.0",
-  "description": "A plugin to create new server instances",
-  "authors": ["Space Nerd"]
-}
