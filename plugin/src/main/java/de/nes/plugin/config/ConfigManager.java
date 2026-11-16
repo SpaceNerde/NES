@@ -7,11 +7,12 @@ import java.nio.file.Path;
 
 public class ConfigManager {
     private final Path dataDirectoy;
+    private final Path configPath;
 
     public ConfigManager(Path dataDirectoy) throws IOException {
         this.dataDirectoy = dataDirectoy;
 
-        ensureConfigFile();
+        this.configPath = ensureConfigFile();
     }   
 
     private Path ensureConfigFile() throws IOException {
@@ -24,7 +25,7 @@ public class ConfigManager {
         
         try (InputStream in = getClass().getResourceAsStream("/config.toml")) {
             if (in != null) {
-                Files.copy(in, file);
+                throw new IllegalStateException("config.toml missing from plugin jar!");
             }
         }
 
